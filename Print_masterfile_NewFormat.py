@@ -5,6 +5,7 @@
 from Bio import Entrez
 Entrez.email = "ppanek@hpu.edu"
 from Bio import SeqIO
+import re
 
 def numberRecords(ListRecords):
     #Function prints number of records
@@ -41,13 +42,26 @@ def TaxonomyToString(Taxonomy, separator):
     return final_str
 
 def SequenceToString(fasta_sequence):
+    #returns sequence as str
+
     final_str = str(fasta_sequence)
+    return final_str
+
+def FixProteinName(old_protein_name):
+    # removes , from protein name (which confuses Excel) and removes any parenthesis
+    str1 = old_protein_name.replace(",", ";")
+
+    str2 = re.sub("([\(\[]).*?([\)\]])", "\g<1>\g<2>", str1)
+
+    final_str = str2.replace("[]", "")
+
     return final_str
 
 
 numberRecords("arc_sequences_06172020.gp")
 
 file = open("output_masterfile.csv", "w")
+file.write("#" + "," + "Protein Name" + "," + "# Amino Acids" + "," + "Accession Number" + "," + "Source Organism" + "," + "Full Taxonomy" + "," + "Assignment" + "," + "Sequence" + "," + "Comment" + "\n")
 
 
 def MakeExcel(ListRecords):
@@ -75,13 +89,13 @@ def MakeExcel(ListRecords):
 
 
 #Classification block begins~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        if seq_record.annotations["taxonomy"][2] == "Ecdysozoa":  #classify as invertebrate
+        if (seq_record.annotations["taxonomy"][2] == "Ecdysozoa") or (seq_record.annotations["taxonomy"][4] == "Insecta"):  #classify as invertebrate
             assignment = "Invertebrate"
 
         elif seq_record.annotations["taxonomy"][6] == "Amphibia":  # classify as amphibia
             assignment = "Amphibian"
 
-        elif seq_record.annotations["taxonomy"][6] == "Actinopterygii":  # classify as fish
+        elif (seq_record.annotations["taxonomy"][6] == "Actinopterygii") or (seq_record.annotations["taxonomy"][6] == "Coelacanthiformes"):  # classify as fish
             assignment = "Fish"
 
         elif seq_record.annotations["taxonomy"][6] == "Archelosauria":  # classify as reptile or bird
@@ -105,13 +119,13 @@ def MakeExcel(ListRecords):
             else:
                 assignment = "Mammal"
         else:
-            assignment = "UNCLASSIFIED FIX ME\n"
-            counter = counter + 1
+            assignment = "UNCLASSIFIED FIX ME"
+            #counter = counter + 1
 #end of classification block~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
         counterRecs = counterRecs + 1  #counter of records
         recNumber = str(counterRecs)
-        printname = seq_record.description
+        printname = FixProteinName(seq_record.description)
         printTaxonomy = TaxonomyToString(seq_record.annotations["taxonomy"], ";")
         printSequence = SequenceToString(seq_record.seq)
         comment = " "
