@@ -12,48 +12,26 @@ def numberRecords(ListRecords):
     records = list(SeqIO.parse(ListRecords, "genbank"))
     print("Found %i records in initial file " % len(records))
 
-def CheckIfDuplicate(first_sequence, second_sequence):
-    # returns 0 (same sequences), 1 (not same sequences, or 3 (something went wrong, function didn't work)
-
-    return_value = 3
-
-    # if same species AND length of sequence is the same, check if the sequence is the same
-    if first_sequence == second_sequence:
-        return_value = 0  #same sequences
-    else:
-        return_value = 1
-
-        return(return_value)
-
-def unknown_aas(sequence):
-    #returns number of unknown amino acids in sequence
-    X_in_sequence = 0
-
-    if 'X' in sequence:
-        X_in_sequence = X_in_sequence + 1
-    return X_in_sequence
-
 def SequenceToString(fasta_sequence):
     #returns sequence as str
 
     final_str = str(fasta_sequence)
     return final_str
 
-def FixProteinName(old_protein_name):
-    # removes , from protein name (which confuses Excel) and removes any parenthesis
-    str1 = old_protein_name.replace(",", ";")
+def FixOrganismName(old_organism_name):
+    # removes any parenthesis with common name
 
-    str2 = re.sub("([\(\[]).*?([\)\]])", "\g<1>\g<2>", str1)
+    str2 = re.sub("([\(\[]).*?([\)\]])", "\g<1>\g<2>", old_organism_name)
 
-    final_str = str2.replace("[]", "")
+    final_str = str2.replace("()", "")
 
     return final_str
 
 
 numberRecords("arc_sequences_06172020.gp")
 
-file = open("output_repeated_sequences.txt", "w")
-file.write("#" + "\t" + "Protein Name" + "\t" + "# Amino Acids" + "\t" + "Source Organism" +  "\t" + "Sequence" + "\t" + "Comment" + "\n")
+file = open("output_repeated_sequences.csv", "w")
+file.write("#" + "," + "Source" + "," + "# Amino Acids" +  "," + "Sequence" + "," + "Comments" + "\n")
 
 ## Creates a list of all sequences in list format
 ListOfSequences = []
@@ -79,28 +57,20 @@ def CheckWholeList(ListRecords, ListOfSequences):
         new_sequence = str(seq_record.seq)
 
 
-
-        Number_of_X = unknown_aas(new_sequence)
-
         counterRecs = counterRecs + 1  #counter of records
         recNumber = str(counterRecs)
-        printname = FixProteinName(seq_record.description)
         printSequence = SequenceToString(seq_record.seq)
+        printSciName = FixOrganismName(seq_record.annotations["source"])
         comment = " "
-        comment2 = " "
-        comment3 = " "
 
-        if (CheckIfDuplicate(new_sequence, old_sequence) == 0):
-            comment = ("Duplicates previous entry  " )
-        if (Number_of_X != 0):
-            comment2 = ("Unknown AAs  ")
+        if (new_sequence == old_sequence):
+            comment = "Duplicates previous entry  "
 
         ct = ListOfSequences.count(printSequence)
 
         if ct > 1:
-            comment3 = "Sequence appears: " + str(ct) + " times in the dataset"
-
-        file.write(recNumber + "\t" + printname + "\t" + str(new_sequence_length)  + "\t" + seq_record.annotations["source"] + "\t" + printSequence + "\t" + comment + "\t" + comment2 + "\t" + comment3  + "\n")
+            comment3 = "Sequence appears total of: " + str(ct) + " times in the dataset"
+            file.write(recNumber + "," + printSciName + "," + str(new_sequence_length) + "," + printSequence + "," + comment + "," + comment3 + "\n")
 
         old_sequence = new_sequence
 
@@ -110,12 +80,3 @@ def CheckWholeList(ListRecords, ListOfSequences):
     file.close()
 
 CheckWholeList("arc_sequences_06172020.gp", ListOfSequences)
-
-
-#for seq_record in SeqIO.parse("arc_sequences_04202020.gp","gb"): #uses GenPept file
-#print(seq_record.description) #protein name [organism]
-#print(seq_record.seq) # sequence
-#print(seq_record.annotations["source"]) #name (common name)
-#print(seq_record.annotations["taxonomy"][0])
-#print(seq_record.annotations)
-#print(len(seq_record)) #length of sequence
