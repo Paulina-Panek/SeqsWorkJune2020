@@ -55,8 +55,17 @@ numberRecords("arc_sequences_06172020.gp")
 file = open("output_repeated_sequences.txt", "w")
 file.write("#" + "\t" + "Protein Name" + "\t" + "# Amino Acids" + "\t" + "Accession Number" + "\t" + "Source Organism" +  "\t" + "Sequence" + "\t" + "Comment" + "\n")
 
+## Creates a list of all sequences in list format
+ListOfSequences = []
 
-def MakeExcel(ListRecords):
+for seq_record in SeqIO.parse("arc_sequences_06172020.gp", "gb"):
+    SeqToAppend = str(seq_record.seq)
+    ListOfSequences.append(SeqToAppend)
+    print (SeqToAppend)
+
+#################################################
+
+def CheckWholeList(ListRecords):
     #assigns group, write with sequence to a file, (in progress) remove duplicate sequences or unknown XXXX
 
     counter = 0
@@ -69,6 +78,9 @@ def MakeExcel(ListRecords):
         new_sequence_name = seq_record.annotations["source"]
         new_sequence_length = len(seq_record)
         new_sequence = str(seq_record.seq)
+
+
+
         Number_of_X = unknown_aas(new_sequence)
 
         counterRecs = counterRecs + 1  #counter of records
@@ -78,11 +90,11 @@ def MakeExcel(ListRecords):
         comment = " "
 
         if (CheckIfDuplicate(new_sequence, old_sequence) == 0):
-            comment = ("*REMOVED* Duplicate  " )
-        elif (Number_of_X != 0):
-            comment = ("*REMOVED* Unknown AAs  ")
+            comment = ("Duplicates previous entry  " )
+        if (Number_of_X != 0):
+            comment2 = ("Unknown AAs  ")
 
-        file.write(recNumber + "\t" + printname + "\t" + str(new_sequence_length)  + "\t" + seq_record.id + "\t" + seq_record.annotations["source"] + "\t" + printSequence + "\t" + comment +"\n")
+        file.write(recNumber + "\t" + printname + "\t" + str(new_sequence_length)  + "\t" + seq_record.id + "\t" + seq_record.annotations["source"] + "\t" + printSequence + "\t" + comment + "\t" + comment2 + "\t" + comment3  + "\n")
 
         old_sequence = new_sequence
 
@@ -91,7 +103,7 @@ def MakeExcel(ListRecords):
 
     file.close()
 
-MakeExcel("arc_sequences_06172020.gp")
+CheckWholeList("arc_sequences_06172020.gp")
 
 
 #for seq_record in SeqIO.parse("arc_sequences_04202020.gp","gb"): #uses GenPept file
