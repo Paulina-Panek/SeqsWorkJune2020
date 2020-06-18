@@ -53,7 +53,7 @@ def FixProteinName(old_protein_name):
 numberRecords("arc_sequences_06172020.gp")
 
 file = open("output_repeated_sequences.txt", "w")
-file.write("#" + "\t" + "Protein Name" + "\t" + "# Amino Acids" + "\t" + "Accession Number" + "\t" + "Source Organism" +  "\t" + "Sequence" + "\t" + "Comment" + "\n")
+file.write("#" + "\t" + "Protein Name" + "\t" + "# Amino Acids" + "\t" + "Source Organism" +  "\t" + "Sequence" + "\t" + "Comment" + "\n")
 
 ## Creates a list of all sequences in list format
 ListOfSequences = []
@@ -61,11 +61,10 @@ ListOfSequences = []
 for seq_record in SeqIO.parse("arc_sequences_06172020.gp", "gb"):
     SeqToAppend = str(seq_record.seq)
     ListOfSequences.append(SeqToAppend)
-    print (SeqToAppend)
 
 #################################################
 
-def CheckWholeList(ListRecords):
+def CheckWholeList(ListRecords, ListOfSequences):
     #assigns group, write with sequence to a file, (in progress) remove duplicate sequences or unknown XXXX
 
     counter = 0
@@ -88,13 +87,20 @@ def CheckWholeList(ListRecords):
         printname = FixProteinName(seq_record.description)
         printSequence = SequenceToString(seq_record.seq)
         comment = " "
+        comment2 = " "
+        comment3 = " "
 
         if (CheckIfDuplicate(new_sequence, old_sequence) == 0):
             comment = ("Duplicates previous entry  " )
         if (Number_of_X != 0):
             comment2 = ("Unknown AAs  ")
 
-        file.write(recNumber + "\t" + printname + "\t" + str(new_sequence_length)  + "\t" + seq_record.id + "\t" + seq_record.annotations["source"] + "\t" + printSequence + "\t" + comment + "\t" + comment2 + "\t" + comment3  + "\n")
+        ct = ListOfSequences.count(printSequence)
+
+        if ct > 1:
+            comment3 = "Sequence appears: " + str(ct) + " times in the dataset"
+
+        file.write(recNumber + "\t" + printname + "\t" + str(new_sequence_length)  + "\t" + seq_record.annotations["source"] + "\t" + printSequence + "\t" + comment + "\t" + comment2 + "\t" + comment3  + "\n")
 
         old_sequence = new_sequence
 
@@ -103,7 +109,7 @@ def CheckWholeList(ListRecords):
 
     file.close()
 
-CheckWholeList("arc_sequences_06172020.gp")
+CheckWholeList("arc_sequences_06172020.gp", ListOfSequences)
 
 
 #for seq_record in SeqIO.parse("arc_sequences_04202020.gp","gb"): #uses GenPept file
